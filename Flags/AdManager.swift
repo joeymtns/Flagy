@@ -4,7 +4,8 @@ import UIKit
 
 class AdManager: NSObject, ObservableObject, FullScreenContentDelegate {
     private var rewardedAd: RewardedInterstitialAd?
-    private let adUnitID = "ca-app-pub-3940256099942544/6978759866" // Test-ID
+    private let adUnitID = "ca-app-pub-4660117225433404/6084709349"
+
 
     var onAdDidDismiss: (() -> Void)?
 

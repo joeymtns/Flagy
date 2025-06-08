@@ -71,6 +71,7 @@ class CountryManager {
         
         let dict: [String: String]
         
+        
         // Wählt die passende Region aus dem dekodierten Objekt
         switch filename {
         case "europe": dict = countryData.Europe ?? [:]
