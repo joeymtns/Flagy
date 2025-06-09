@@ -6,7 +6,7 @@ class AdManager: NSObject, ObservableObject, FullScreenContentDelegate {
     private var rewardedAd: RewardedInterstitialAd?
     private let adUnitID = "ca-app-pub-4660117225433404/6084709349"
 
-
+    @Published var isAdLoaded = false
     var onAdDidDismiss: (() -> Void)?
 
     override init() {
@@ -15,15 +15,21 @@ class AdManager: NSObject, ObservableObject, FullScreenContentDelegate {
     }
 
     func loadAd() {
+        isAdLoaded = false
         let request = Request()
-        RewardedInterstitialAd.load(with: adUnitID, request: request) { ad, error in
-            if let error = error {
-                print("Ad konnte nicht geladen werden: \(error.localizedDescription)")
-                return
+        RewardedInterstitialAd.load(with: adUnitID, request: request) { [weak self] ad, error in
+            DispatchQueue.main.async {
+                if let error = error {
+                    print("Ad konnte nicht geladen werden: \(error.localizedDescription)")
+                    self?.isAdLoaded = false
+                    return
+                }
+
+                self?.rewardedAd = ad
+                self?.rewardedAd?.fullScreenContentDelegate = self
+                self?.isAdLoaded = true
+                print("Rewarded Interstitial Ad erfolgreich geladen")
             }
-            self.rewardedAd = ad
-            self.rewardedAd?.fullScreenContentDelegate = self
-            print("Rewarded Interstitial Ad erfolgreich geladen")
         }
     }
 
@@ -34,9 +40,9 @@ class AdManager: NSObject, ObservableObject, FullScreenContentDelegate {
             return
         }
 
+        isAdLoaded = false
         self.onAdDidDismiss = completion
         ad.present(from: rootVC) {
-            // Optional: Reward verarbeiten
             print("Benutzer hat Werbung gesehen")
         }
     }
@@ -52,5 +58,6 @@ class AdManager: NSObject, ObservableObject, FullScreenContentDelegate {
         onAdDidDismiss?()
     }
 }
+
 
 
