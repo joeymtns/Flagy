@@ -52,7 +52,6 @@ struct QuizResultView: View {
                     }) {
                         ButtonStyle.primaryButton(title: "Replay", icon: "arrow.clockwise", color: .glowingBlue)
                     }
-                    .disabled(!adManager.isAdLoaded)
 
                     Button(action: {
                         showAdThen {
@@ -61,7 +60,6 @@ struct QuizResultView: View {
                     }) {
                         ButtonStyle.primaryButton(title: "Home", icon: "house", color: .secondaryGreen)
                     }
-                    .disabled(!adManager.isAdLoaded)
                 }
                 .padding(.horizontal)
                 .padding(.bottom, 30)
@@ -78,16 +76,16 @@ struct QuizResultView: View {
     }
 
     private func showAdThen(_ completion: @escaping () -> Void) {
-        if let rootVC = UIApplication.shared.connectedScenes
-            .compactMap({ ($0 as? UIWindowScene)?.keyWindow?.rootViewController })
-            .first {
+        if adManager.isAdLoaded,
+           let rootVC = UIApplication.shared.connectedScenes
+               .compactMap({ ($0 as? UIWindowScene)?.keyWindow?.rootViewController })
+               .first {
             adManager.showAd(from: rootVC) {
                 completion()
             }
         } else {
+            // Ad nicht geladen – einfach fortfahren
             completion()
         }
     }
 }
-
-
