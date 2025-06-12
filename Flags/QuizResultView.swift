@@ -4,9 +4,10 @@ import GoogleMobileAds
 struct QuizResultView: View {
     let score: Int
     let total: Int
+    let region: String  // ← übergeben aus dem QuizView
 
-    @Environment(\.presentationMode) var presentationMode
-    @State private var navigateToHome = false
+    @State private var goToMain = false
+    @State private var goToSettings = false
     @StateObject private var adManager = AdManager()
 
     var body: some View {
@@ -47,7 +48,7 @@ struct QuizResultView: View {
                 VStack(spacing: 15) {
                     Button(action: {
                         showAdThen {
-                            presentationMode.wrappedValue.dismiss()
+                            goToSettings = true
                         }
                     }) {
                         ButtonStyle.primaryButton(title: "Replay", icon: "arrow.clockwise", color: .glowingBlue)
@@ -55,7 +56,7 @@ struct QuizResultView: View {
 
                     Button(action: {
                         showAdThen {
-                            navigateToHome = true
+                            goToMain = true
                         }
                     }) {
                         ButtonStyle.primaryButton(title: "Home", icon: "house", color: .secondaryGreen)
@@ -67,25 +68,34 @@ struct QuizResultView: View {
         }
         .navigationBarBackButtonHidden(true)
         .navigationBarHidden(true)
-        .fullScreenCover(isPresented: $navigateToHome) {
-            NavigationView {
-                MainView()
-            }
-            .navigationViewStyle(StackNavigationViewStyle())
+
+        // Navigation zur MainView
+        .navigationDestination(isPresented: $goToMain) {
+            MainView()
+        }
+
+        // Navigation zur SettingsView mit Region
+        .navigationDestination(isPresented: $goToSettings) {
+            QuizSettingsView(region: region)
         }
     }
 
     private func showAdThen(_ completion: @escaping () -> Void) {
-        if adManager.isAdLoaded,
-           let rootVC = UIApplication.shared.connectedScenes
-               .compactMap({ ($0 as? UIWindowScene)?.keyWindow?.rootViewController })
-               .first {
+        let rootVC = UIApplication.shared.connectedScenes
+            .compactMap { ($0 as? UIWindowScene)?.keyWindow?.rootViewController }
+            .first
+
+        // Ad nur zeigen, wenn keine View gerade präsentiert wird
+        if rootVC?.presentedViewController == nil {
             adManager.showAd(from: rootVC) {
                 completion()
             }
         } else {
-            // Ad nicht geladen – einfach fortfahren
+            print("⚠️ Already presenting a view – skipping ad")
             completion()
         }
     }
 }
+
+
+

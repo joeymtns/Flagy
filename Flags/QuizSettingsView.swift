@@ -1,25 +1,22 @@
 import SwiftUI
+import GoogleMobileAds
 
 struct QuizSettingsView: View {
-    // Übergebene Region, für die das Quiz gilt
     let region: String
-    
-    // Vom Nutzer ausgewählte Anzahl an Fragen (Standard: 10)
+
     @State private var selectedQuestionCount = 10
-    
-    // Vom Nutzer ausgewählte Zeit pro Frage in Sekunden (Standard: 5)
     @State private var selectedTimePerQuestion = 5
-    
-    // Ermöglicht das Schließen der aktuellen View (z. B. über Zurück-Button)
+
+    @State private var showQuiz = false
+    @StateObject private var adManager = AdManager()
+
     @Environment(\.presentationMode) var presentationMode
-    
+
     var body: some View {
         ZStack {
-            // Hintergrundfarbe der View
             Color.backgroundGray.ignoresSafeArea()
-            
+
             VStack(spacing: 25) {
-                // Einstellungs-Karte für die Anzahl der Fragen
                 SettingsCard(
                     icon: "number.circle.fill",
                     title: "Flags",
@@ -28,8 +25,7 @@ struct QuizSettingsView: View {
                 ) {
                     CustomSlider(value: $selectedQuestionCount, in: QuizSettings.questionOptions)
                 }
-                
-                // Einstellungs-Karte für die Zeit pro Frage
+
                 SettingsCard(
                     icon: "timer.circle.fill",
                     title: "Seconds",
@@ -38,33 +34,22 @@ struct QuizSettingsView: View {
                 ) {
                     CustomSlider(value: $selectedTimePerQuestion, in: QuizSettings.timeOptions)
                 }
-                
+
                 Spacer()
-                
-                // Navigation zum QuizView mit den gewählten Einstellungen
-                NavigationLink(
-                    destination: QuizView(
-                        region: region,
-                        questionCount: selectedQuestionCount,
-                        timePerQuestion: selectedTimePerQuestion,
-                        countries: CountryManager.loadCountries(for: region)
-                    )
-                ) {
-                    // Start-Button für das Quiz
+
+                Button(action: {
+                    showAdThen {
+                        showQuiz = true
+                    }
+                }) {
                     ButtonStyle.primaryButton(title: "Start Quiz", icon: "play.circle.fill", color: .primaryBlue)
                 }
             }
             .padding()
         }
-        // Titel der Navigationsleiste
         .navigationTitle("Settings")
         .navigationBarTitleDisplayMode(.large)
         .navigationBarBackButtonHidden(true)
-        .toolbarBackground(.visible, for: .navigationBar)
-        .toolbarColorScheme(.light, for: .navigationBar)
-        .foregroundColor(.black)
-
-        // Benutzerdefinierter Zurück-Button (Chevron)
         .navigationBarItems(leading: Button(action: {
             presentationMode.wrappedValue.dismiss()
         }) {
@@ -72,6 +57,28 @@ struct QuizSettingsView: View {
                 .font(.title2)
                 .foregroundColor(.blue)
         })
+        .navigationDestination(isPresented: $showQuiz) {
+            QuizView(
+                region: region,
+                questionCount: selectedQuestionCount,
+                timePerQuestion: selectedTimePerQuestion,
+                countries: CountryManager.loadCountries(for: region)
+            )
+        }
+    }
+
+    /// Zeigt Werbung (wenn möglich) und navigiert dann weiter
+    private func showAdThen(_ completion: @escaping () -> Void) {
+        let rootVC = UIApplication.shared.connectedScenes
+            .compactMap { ($0 as? UIWindowScene)?.keyWindow?.rootViewController }
+            .first
+
+        adManager.showAd(from: rootVC) {
+            completion()
+        }
     }
 }
+
+
+
 

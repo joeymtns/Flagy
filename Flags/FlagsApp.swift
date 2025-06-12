@@ -7,15 +7,16 @@
 
 import SwiftUI
 
-// Einstiegspunkt der App – wird beim Starten der App als Erstes aufgerufen
 @main
 struct FlagsApp: App {
     var body: some Scene {
         WindowGroup {
-            NavigationView {
+            NavigationStack {
                 MainView()
             }
-            .navigationViewStyle(StackNavigationViewStyle())
         }
     }
 }
+
+
+
